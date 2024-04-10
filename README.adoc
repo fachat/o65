@@ -6,6 +6,10 @@ This is the reference documentation for the *o65* file format.
 
 Quick link:: link:../main/fileformat.html[current version (1.3)]
 
+Changes
+~~~~~~~
+
+Changes in v1.3 are an upward compatible change in the mode bits, more os types, and better explanations. 
 
 
 Proposed Changes
@@ -17,11 +21,9 @@ Proposed version 1.4
 Proposed version "NG"
 ~~~~~~~~~~~~~~~~~~~~~
 
+Due to some requests to support other CPUs and "larger" systems, I have made an attempt to define a new, "v2" version of the o65 file format. It is far from complete, and open for discussion. 
 
-Changes
-~~~~~~~
-
-Changes in v1.3 are an upward compatible change in the mode bits, more os types, and better explanations. 
+Link:: link:fileformatng.html
 
 
 Historic versions
