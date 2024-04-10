@@ -1,13 +1,21 @@
-<html><head><meta name="author" content="Andr&eacute; Fachat">
-<title>6502 binary relocation format</title></head>
+<html><head><title>6502 binary relocation format</title>
+<link rev=made href="mailto:a.fachat@physik.tu-chemnitz.de">
+</head>
 <body bgcolor="#ffffff">
-<h1>6502 binary relocation format V1.1 as of 27jan1997</h1>
+<h1>6502 binary relocation format</h1>
+<h2>V1.2 as of 27jan1998</h2>
+<h3>(c) André Fachat (a.fachat@physik.tu-chemnitz.de)</h3>
 <hr>
-<h2>(c) André Fachat (a.fachat@physik.tu-chemnitz.de)</h2>
+<h3>Changes from V1.1</h3>
 <p>
-
-<h3> 0) Preface</h3>
-
+The <a href="#change12a">order</a> for saving the undefined reference and the low byte of a 
+high byte relocation entry has changed. This makes the OS/A65 lib6502
+implementation easier. How many other people use this format anyway...?
+</p>
+<hr>
+<p>
+<h3>0) Preface</h3>
+<p>
 With some new 6502/C64/C128 operating systems comes the need for a new
 binary format. In multitasking operating systems like Lunix, SMOS, or
 OS/A65, a binary file cannot be loaded to a fixed location that might
@@ -25,8 +33,8 @@ modes, that add the contents of the direct register to the zeropage
 address in the opcode. 
 <p>
 
-<h3> 1) 6502/65816 specifics </h3>
-
+<h3>1) 6502/65816 specifics</h3>
+<p>
 The 6502 has the special feature of a 'zeropage', i.e. a very limited
 memory address range used for special addressing modes. So the format
 should not only provide a means to relocate absolute addresses but also
@@ -49,10 +57,10 @@ references. The 65816 can even have three byte addresses, i.e. address
 in a segment and segment number.
 <p>
 
-<h3> 2) binary format </h3>
+<h3>2) binary format</h3>
 
-<h4> 2.1) General </h4>
-
+<h4>2.1) General</h4>
+<p>
 The file differs from the known Commodore file formats, in that a lot
 more information is stored in the file. First the data is structured
 in separate segments to allow different handling of text (program code),
@@ -62,8 +70,8 @@ Also tables are included to allow late binding, i.e. linking the
 file with other files at load time, and relocation, i.e. executing
 the file at different addresses in 6502 address space.
 <p>
-<h4> 2.2) Segments </h4>
-
+<h4>2.2) Segments</h4>
+<p>
 As already used in other formats, the assembler uses three different
 segment types, i.e. text (the actual program code), data (initialized
 variables), and bss (uninitialized variables). 
@@ -90,30 +98,30 @@ anywhere in memory (except zero segment, which has to be in the zeropage
 resp. bank zero). The program must therefore not assume anything about
 the relative addresses between different segments.
 <p>
-<h4> 2.3) Relocation </h4>
-
+<h4>2.3) Relocation</h4>
+<p>
 In general, there are three ways to handle the relocation problem so far:
-<ul>
-<li> Tables: have a relocation table for a text segment
+<pre>
+- Tables: have a relocation table for a text segment
   if the relocation table is put in front of code
   you have to save the table in a side-storage
   if table is behind, you still cannot relocate 'on the fly'.
 
-<li> Deassembling: go through the code, deassemble it and change all absolute
+- Deassembling: go through the code, deassemble it and change all absolute
   addresses. Problem: needs to know or have hints about where some
   data is in the code.
 
-<li> Relocation info in the code: here each address is preceeded with an
+- Relocation info in the code: here each address is preceeded with an
   'escape' code and is relocated when loading. But this disallows block
   oriented transfer from storage media to memory.
-</ul>
+</pre>
 This binary format uses the first method, with the table after the
 code/data. This way block oriented transfer for the text/data segment can
 be used. And while reading the relocation tables bytewise, the relocation
 can be done without the need to save the table somewhere.
 <p>
-<h4> 2.4) External References & Exported Globals</h4>
-
+<h4>2.4) External References & Exported Globals</h4>
+<p>
 As this file format should not only be used as an executable format, but
 also as object file format, it must provide a way to define references
 - references exported from this object and labels referenced in this
@@ -127,13 +135,13 @@ but only if the operating system allows this. In this case, so called
 'late binding' is used to link the object with some global libraries 
 at link time.
 <p>
-<h4> 2.5) File extension </h4>
-
+<h4>2.5) File extension</h4>
+<p>
 The proposed standard extension for the described format is ".o65" when
 used as an object file. 
 <p>
-<h4> 2.6) Format description </h4>
-
+<h4>2.6) Format description</h4>
+<p>
 The binary format is the following:
 <pre>
    (
@@ -154,8 +162,8 @@ The binary format is the following:
 </pre>
 The description of the parts follows:
 <p>
-<h5> 2.6.1) Header </h5>
-
+<h5>2.6.1) Header</h5>
+<p>
 The header contains the minimum needed data in a fixed struct.
 The rest of the necessary information is put into the header options.
 [Note: .word is a 16 bit value, low byte first, .byt is a simple byte.
@@ -211,6 +219,7 @@ simpler compilers/assemblers.
 The size bit determines the size of the segment base address and length
 entries. Currently the 16 bit size (size bit = 0) works for 6502 and
 65816 CPUs.
+<p>
 The obj bit distinguishes between object files and executables.
 An object file is used as assembler output that can be linked with 
 other object files to build an executable or an object library.
@@ -243,57 +252,49 @@ header option list.
    )
 </pre>
 The header options currently defined/proposed are:
-<ul>
-<li> Filename: <br>
-  type=0; len=strlen(filename_in_ascii)+3; content="filename_in_ascii",0 <br>
+<pre>
+- Filename:
+  type=0; len=strlen(filename_in_ascii)+3; content="filename_in_ascii",0
   The string contains the name of the object.
 
-<li> Operating System Header <br>
-  type=1; len=? <br>
+- Operating System Header
+  type=1; len=?
   the first data byte is the OS type:
-<pre>
     	1 	OSA/65 header supplement
 	2	Lunix header supplement
 	[others to follow?]
-</pre>
   the following data contains OS specific information.
   A suggested data byte is the OS version as second byte.
 
-<li> Assemblerprogram: <br>
-  type=2; len=strlen(ass)+3; content="ass",0 <br>
+- Assemblerprogram:
+  type=2; len=strlen(ass)+3; content="ass",0
   The string contains the name of the assembler resp. linker that produced 
-  this file/object. <br>
+  this file/object.
   For example (syntax see below)
-<pre>
      .fopt 2, "xa 2.1.1g",0
-</pre>
   becomes
-<pre>
      0c 02 78 61 20 32 2e 31 2e 31 67 00
-</pre>
   in the file.
 
-<li> Author: <br>
-  type=3; len=strlen(author)+3; content="author",0 <br>
+- Author:
+  type=3; len=strlen(author)+3; content="author",0
   The string contains the author of the file. 
 
-<li> Creation data: <br>
-  type=4; len=strlen(date)+3; content="date_string",0 <br>
+- Creation data:
+  type=4; len=strlen(date)+3; content="date_string",0
   The string contains the creation date in format like:
   "Sat Dec 21 14:00:23 MET 1996", where we have the day, Month, date,
   time, timezone and year. See output of `date`...
-</ul>
+</pre>
+<h5>2.6.2) text and data segments</h5>
 <p>
-
-<h5> 2.6.2) text and data segments </h5>
-
 The text and data segments are just the assembled code.
 The only difference between text and data segments is the read/write mode
 of the two segments. Therefore, to be compliant to this file format,
 self-modifying code goes into the data segment.
 <p>
-<h5> 2.6.3) Undefined references list </h5>
-
+<h5>2.6.3) Undefined references list</h5>
+<p>
 The next list is an ASCII list of labels that are referenced in this file
 but not defined. The lists is preceeded with the number of undefined labels
 (16 or 32 bits, according to the mode.size bit). 
@@ -304,8 +305,8 @@ undef_list:	number_of_undefined_labels.s
 		...
 </pre>
 
-<h5> 2.6.4) Relocation tables </h5>
-
+<h5>2.6.4) Relocation tables</h5>
+<p>
 The relocation tables are the same format for the two segments, text and
 data. In general a relocation entry consists of the offset from the 
 previous relocation address to the next one, the type of the relocation
@@ -353,9 +354,18 @@ If the type is SEG, then the two lower bytes of the three byte segment
 address are stored behind the entry in the relocation table, lower byte
 first.
 <p>
+<!---
 If the segment is "undefined", then the whole relocation entry is followed
 by a two (mode.size=0) or four (mode.size=1) byte value index in the
 undefined references list.
+--->
+<a name="change12a"></a>
+If the segment is "undefined", the typebyte is immediately followed
+by the two (mode size=0) or four (mode size=1) byte value index 
+in the undefined references list. If it is a high byte relocation,
+the low byte is saved behind the index value. The index value 
+determines the undefined reference, which must be looked up by the
+loader.
 <p>
 The value taken from the relocation address in the segment, together with
 the low byte from the relocation table (if HIGH entry) form the address
@@ -372,8 +382,8 @@ relocation table. instead it is assumed that the 65816 direct register
 holds the correct value (i.e. zero segment base address) when running
 this program.
 <p> 
-<h6>Example:</h6>
-
+Example:
+<p>
 Segment Base address in file (header.tbase) is $1000. 
 The start address of the text segment after relocation is real.tbase = $1234.
 <p>
@@ -429,7 +439,7 @@ Had "vector" now been an undefined reference, and "vector" would be
 the second label in the undefined references list, we would get the
 following relocation table entry (assuming mode.size=0):
 <pre>
-$ff, $ff, $28, $40, $00, $02, $00
+$ff, $ff, $28, $40, $02, $00, $00
 </pre>
 The value computed with the above formula for vector_file is now added
 to the address the label "vector" now really has (This must of course
@@ -440,8 +450,8 @@ This value would result in vector_file and the real address of "vector"
 would be added before wrting back the high byte to the opcode.
 <p>
 
-<h5> 2.6.5) exported globals list </h5>
-
+<h5>2.6.5) exported globals list</h5>
+<p>
 The global list is a list of names, together with the target segment
 and the offset in the segment for each name. It is preceeded with the
 number of exported labels. This allows the loader to allocate a table
@@ -454,10 +464,9 @@ table entry (see section 2.6.3).
         "global_label_name_in_asc1",0, segmentID.b, value.s
 	...
 </pre>
+
+<h3>3) assembler source format</h3>
 <p>
-
-<h3> 3) assembler source format </h3>
-
 The assembler source format is a suggestion only. It will be implemented
 in xa65, a cross assembler for 6502 CPUs running on Unix/Atari ST/Amiga
 as a reference platform.
@@ -471,8 +480,8 @@ the text segment start address to where the code will be in the ROM.
 Of course, the other segments must be taken care of with -b? command
 line parameter, that set the segment start address.
 <p>
-<h4> 3.1) embed absolute code in relocatable files </h4>
-
+<h4>3.1) embed absolute code in relocatable files</h4>
+<p>
 When the assembler is started in relocatable mode, everything is put into
 a .o65 relocatable file. All address references generate relocation table
 entries. If a "*= value" pseudo opcode is encountered,
@@ -481,14 +490,14 @@ generate relocation table entries. If a "*=" without a value is read,
 then the assembler switches back to relocatable mode. The relocation
 program counter is increased with the length of the absolute part and
 the absolute code is embedded between the relocatable parts.
-
-<h4> 3.2) embed relocatable code in absolute files </h4>
-
+<p>
+<h4>3.2) embed relocatable code in absolute files</h4>
+<p>
 This is dropped - too complicated. Should better be done with some
 objdump or linker programs or so.
 <p>
-<h4> 3.3) Header options </h4>
-
+<h4>3.2) Header options</h4>
+<p>
 Before any opcode (after starting in relocatable mode, or after a .reloc
 opcode), a header option can be set by:
 <pre>
@@ -503,8 +512,8 @@ The 3 is the type byte for the author header option. The last zero ends
 the name.  The assembler can be configured to automatically include an
 assembler header option into a file header.
 <p>
-<h4> 3.4) allocation of data segment/zeropage segment address space </h4>
-
+<h4>3.3) allocation of data segment/zeropage segment address space</h4>
+<p>
 The assembler switches between the different segments by the means of
 ".text", ".data", ".bss" and ".zero" pseudo opcodes. After starting in
 relocatable mode, the assembler is in the text segment.
@@ -520,8 +529,8 @@ zero segments only the length is saved in the file.
 The assembler should issue a warning when a direct addressing mode
 is used without a zero segment address and vice versa for 65816 CPUs.
 <p> 
-<h4> 3.5) referencing data/bss/zeropage addresses </h4>
-
+<h4>3.4) referencing data/bss/zeropage addresses</h4>
+<p>
 One problem with the 6502 is, that it cannot load an address within one
 step or assembler opcode. So an address is loaded with standard byte
 opcodes, like "lda #&lt;label". But how do we decide, whether "label"
@@ -542,8 +551,8 @@ by using the "label:" syntax, as opposed to "label = value".
 Also, if the assembler is capable of doing so, an address label may be
 defined by "label opcode", i.e. without a colon.
 <p>
-<h4> 3.5) aligning code </h4>
-
+<h4>3.5) aligning code</h4>
+<p>
 The 6502 has the problem that some opcodes (e.g. "JMP ($xxFF)" are 
 broken, if the address given is at some (odd) address. But when loading
 a relocatable file, one cannot know if an address will be odd or even.
@@ -554,8 +563,8 @@ Therefore there is a new opcode,
 that aligns the next address at the given address boundary. Valid
 values are 2, 4, and 256. 
 <p>
-<h3> 4) Clearance </h3>
-
+<h3>4) Clearance</h3>
+<p>
 This file is surely not the optimum and could be improved. Also the 
 header option "assigned numbers" should be added here. 
 <p>
@@ -563,14 +572,13 @@ For this reason the author, André Fachat, will function as a
 clearing point, where problems can be discussed and number can be assigned.
 <p>
 
-Dec. 22, 1996,
-André Fachat 
-(fachat@physik.tu-chemnitz.de)
+Dec. 22, 1996,<br>
+Andr&eacute; Fachat <br>
+(fachat@physik.tu-chemnitz.de)<br>
+<p>
+<h2>Appendix</h2>
 
-<h3> Appendix </h3>
-
-A) File examples
+<h3>A) File examples</h3>
+<p>
 (to be done with reference assembler)
-
-</body>
-</html>
+</body></html>
