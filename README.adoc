@@ -40,6 +40,17 @@ Proposed Changes
 Proposed version 1.4
 ~~~~~~~~~~~~~~~~~~~~
 
+These are the changes that I propse for 1.4. The goal is to keep compatibilty of older files with newer loaders, but not necessarily vice versa.
+
+* add support for the MEGA65 / C64 CPU 4510, *if* it is not already covered by the 65ce02. +
+	Discuss link:https://github.com/fachat/o65/issues/1[issue on github]
+* add support for 32 bit relocation table entries. +
+	Discuss link:https://github.com/fachat/o65/issues/2[issue on github]
+* add support for 2s-complement undefined relocation entries +
+	Discuss link:https://github.com/fachat/o65/issues/3[issue on github]
+* add support to note for direct stack access (like *LDA $0100,X*) +
+	Discuss link:https://github.com/fachat/o65/issues/4[issue on github]
+
 Proposed version "NG"
 ~~~~~~~~~~~~~~~~~~~~~
 
