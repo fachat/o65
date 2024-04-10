@@ -11,7 +11,7 @@ Changes from V1.2
 These changes have been lingering in my inbox for quite a while, only now did I find the
 time to update the document.
 
-* New Operating System ID for <a href="#change13a">CC65 generic and opencbm</a>
+* New Operating System ID for <<change13a,CC65 generic and opencbm>>
 * New mode bit for <a href="#change13b">simple address schema</a>
 * A note about <a href="#change13c">exporting an undefined reference</a>
 * An <a href="#change13d">example</a> for late binding
@@ -368,7 +368,7 @@ header option list.
 
 The header options currently defined/proposed are:
 
-<a name="change13a">
+[[change13a]]
 
 [source]
 ----
