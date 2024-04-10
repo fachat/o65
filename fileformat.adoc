@@ -12,20 +12,20 @@ These changes have been lingering in my inbox for quite a while, only now did I 
 time to update the document.
 
 * New Operating System ID for <<change13a,CC65 generic and opencbm>>
-* New mode bit for <a href="#change13b">simple address schema</a>
-* A note about <a href="#change13c">exporting an undefined reference</a>
-* An <a href="#change13d">example</a> for late binding
-* An <a href="#change13e">improved explanation</a> of the relocation table entries
-* Additional notes about character encodings and name lengths for <a href="#change13g">undefined
-references</a> and <a href="#change13f">exported labels</a>.
-* A new header bit to <a href="#change13h">chain</a> o65 files.
-* New header bits to <a href="#change13i">detect</a> 65xx CPU types.
-* A New header bit to <a href="#change13j">signal bss zeroing</a>.
+* New mode bit for <<change13b,simple address schema>>
+* A note about <<change13c,exporting an undefined reference>>
+* An <<change13d,example>> for late binding
+* An <<change13e,improved explanation>> of the relocation table entries
+* Additional notes about character encodings and name lengths for <<change13g,undefined
+references>> and <<change13f,exported labels>>.
+* A new header bit to <<change13h,chain>> o65 files.
+* New header bits to <<change13i,detect>> 65xx CPU types.
+* A New header bit to <<change13j,signal bss zeroing>>.
 
 Changes from V1.1
 ~~~~~~~~~~~~~~~~~
 
-The <a href="#change12a">order</a> for saving the undefined reference and the low byte of a 
+The <<change12a,order>> for saving the undefined reference and the low byte of a 
 high byte relocation entry has changed. This makes the OS/A65 lib6502
 implementation easier.
 
@@ -229,7 +229,7 @@ This is the fixed struct:
 ----
 
 The mode word currently has these defined bits:
-<a name="change13b"></a>
+[[change13b]]
 
 [source]
 ----
@@ -294,7 +294,7 @@ one block, and can then use the same base address for the relocation of all thre
 text, data and bss segments. The *simple* mode bit is optional, in that when it is set the conditions
 must be fulfilled, but if not set the conditions may or may not be fulfilled.
 
-<a name="change13h">
+[[change13h]]
 The *chain* bit signals the loader that after the current o65 "file"
 there is another "file" appended to the actual file on disk. This way "multi-o65" files can be 
 built. An "o65" file in a multi-o65 file is here now called "section". 
@@ -325,10 +325,10 @@ different sections and their purposes. Currently there is no simple way except u
 order of the sections in the file. A more complicated way would be to use optional headers
 in each section.
 
-<a name="change13j">
+[[change13j]]
 The *bsszero* bit tells the loader that the executable to be loaded requires the bss segment to be zeroed out. If it is not set, then the code must not assume any special value in the bss segment (which is the default behaviour for o65 version 1.2 and below). A loader that does not support zeroing out the bss segment must reject a file with this bit set.
 
-<a name="change13i">
+[[change13i]]
 The *CPU2* bits determine the type of 6502 CPU. *6502 core* means that
 only the originally documented 6502 opcodes are used. In addition the *NMOS 6502*
 signals that in addition to the code, some undocumented opcodes of the NMOS version are
@@ -431,7 +431,7 @@ undef_list:	number_of_undefined_labels.s
 		...
 ----
 
-<a name="change13g">
+[[change13g]]
 The character encoding and length of the names of the undefined labels should be 
 appropriate for the target platform, that may define additional constraints. 
 The encoding must allow zero-terminated byte arrays
@@ -497,7 +497,7 @@ If the type is SEG, then the two lower bytes of the three byte segment
 address are stored behind the entry in the relocation table, lower byte
 first.
 
-<a name="change12a"></a>
+[[change12a]]
 If the segment is "undefined", the typebyte is immediately followed
 by the two (mode size=0) or four (mode size=1) byte value index 
 in the undefined references list. If it is a high byte relocation,
@@ -534,7 +534,7 @@ place is here:
 $1222	A9 23 		lda #&gt;vector
 ----
 
-<a name="change13e"></a>
+[[change13e]]
 To compute the relocation table entry, we have to identify the address
 that must be relocated. This is not the opcode address $1222, but the 
 address of the parameter to the offset, i.e. $1223. The first relocation
@@ -629,12 +629,12 @@ table entry (see section 2.6.3).
 	...
 ----
 
-<a name="change13c"></a>
+[[change13c]]
 Note:: an undefined reference can not be exported. Doing this would lead 
 	to circular references for example when linking multiple object files,
 	therefor it is not allowed.
 
-<a name="change13f">
+[[change13f]]
 The character encoding and length of the names of the undefined labels should be 
 appropriate for the target platform, that may define additional constraints. 
 The encoding must allow zero-terminated byte arrays
@@ -816,7 +816,7 @@ preference of the author.
 B) Late binding
 ~~~~~~~~~~~~~~~
 
-<a name="change13d"></a>
+[[change13d]]
 Late binding means that during the assembler run the values of some
 variables are not known. Instead these variable values are filled in 
 when the program file is loaded into the system.
