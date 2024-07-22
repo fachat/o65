@@ -5,6 +5,17 @@ V1.3 as of 31 mar 2005
 
 (c) André Fachat (afachat@gmx.de)
 
+Changes from V1.3 / 31. Mar 2005
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This is not a change in file format. It just makes the documentation more clear 
+and includes a more general syntax that did not include all cases described in the text before.
+
+Some clarification as reported in https://github.com/fachat/o65/issues/6:
+
+* corrected <<change131,relocation syntax>>
+
+
 Changes from V1.2
 ~~~~~~~~~~~~~~~~~
 
@@ -448,20 +459,16 @@ and additional info. Relocation not only defines the relocation when
 moving object code to a different address, but also filling in the
 undefined references.
 
-Each table starts at relocation address = segment base address -1.
-I.e. if the segment base address is $1000 for example, the first entry
-has an offset computed from base address-1 = $0fff.
-The offset to the next relocation address is the first byte of each
-entry. If the offset is larger than 254 (i.e. 255 or above), than a 
-255 is set as offset byte, the offset is decremented by 254 (note the
-difference) and the entry is started again.
+*Relocation Entry Syntax*
 
-[source]
+[source][[change131]]
 ----
-{ [255,...,255,] offset of next relocation (b), typebyte|segmentID [, low_byte] }+
+{ [255,...,255,] offset of next relocation (b), typebyte|segmentID [, undefined index] [, low offset] }+
 ----
 
-where typebyte has the bits 5, 6 and 7 and is one of
+where:
+
+- *typebyte* has the bits 5, 6 and 7 and is one of
 
 [source]
 ----
@@ -472,41 +479,86 @@ SEGADR	$c0	3 byte address (65816)
 SEG	$a0	segment byte of 3 byte address
 ----
 
-The segmentID stands for the segment the reference points to:
+- *segmentID* stands for the segment the reference points to:
 
 [source]
 ----
 0		undefined
-1		absolute value
+1		(absolute value)
 2		text segment
 3		data segment
 4		bss segment
 5		zero segment
 ----
 
-(Of course the absolute value will never appear in a relocation table,
-but this value is necessary for the exported list)
+Note:: Of course the absolute value will never appear in a relocation table,
+	but this value is necessary for the exported list.
+
+- *undefined index* is the index number of the undefined
+	label if *segmentID* is 0. It is only used if *segmentID* is 0.
+	The size of the index depends on header mode size bit
+	(0: 2 byte, 1: 4 byte)
+
+- *low offset* is the lower part of an address in the relocation
+	table, where only higher parts are included in the code.
+	The length depends on the relocation *typebyte*:
+
+[source]
+----
+HIGH	1 byte low offset: the low byte of the address in a HIGH relocation entry
+SEG	2 byte low offset: the 16 bit address of the 24 bit address in a SEG relocation entry
+----
+
+*Relocation Entry Description*
+
+The first byte(s) of the relocation entry determines the position of
+the address to be relocated.
+
+Each relocation table starts at relocation address = segment base address -1.
+I.e. if the segment base address is $1000 for example, the first entry
+has an offset computed from base address-1 = $0fff.
+The offset to the next relocation address is the first byte of each
+entry. If the offset is larger than 254 (i.e. 255 or above), than a 
+255 is set as offset byte, the offset is decremented by 254 (note the
+difference) and the entry is started again.
+A relocation offset of zero ends the relocation table.
+
+The first byte after the relocation address determines the type of the 
+relocation, and the segment of the address in the relocation.
+
+As in the code partial addresses can be used, the type of the relocation
+entry defines which parts are in the code and which are in the relocation table.
+For example, code like
+
+[source]
+----
+	LDA #>address
+----
+
+refers to the high byte of an address, so this is a HIGH relocation, 
+and so forth.
 
 If the type is HIGH, the low byte of the value is stored behind the
-relocation table entry, if bytewise relocation is allowed (header mode
-field bit 14).  If only pagewise relocation is allowed, then only HIGH
+relocation table entry (in the *low offset* field), if bytewise relocation is allowed (header mode
+field bit 14). If only pagewise relocation is allowed, then only HIGH
 relocation entries can occur, and the low byte is implicitely set zero
 (i.e. it is _not_ saved in the relocation table).
 
 If the type is SEG, then the two lower bytes of the three byte segment
-address are stored behind the entry in the relocation table, lower byte
-first.
+address are stored behind the entry in the relocation table 
+(in the *low offset* field), lower byte first.
 
 [[change12a]]
 If the segment is "undefined", the typebyte is immediately followed
 by the two (mode size=0) or four (mode size=1) byte value index 
-in the undefined references list. If it is a high byte relocation,
-the low byte is saved behind the index value. The index value 
+in the undefined references list (in the *undefined index* field). 
+If it is a high byte relocation,
+the low byte is saved behind the index value (*low offset* field). The *undefined index* value 
 determines the undefined reference, which must be looked up by the
 loader.
 
 The value taken from the relocation address in the segment, together with
-the low byte from the relocation table (if HIGH entry) form the address
+the low offset from the relocation table (if HIGH or SEG entry) form the address
 used if the segment would be used unrelocated. To relocate the segment,
 the difference between the relocated segment base address and the segment
 base address from the file is then added to the above address. The result
