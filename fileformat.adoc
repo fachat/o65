@@ -14,6 +14,8 @@ and includes a more general syntax that did not include all cases described in t
 Some clarification as reported in https://github.com/fachat/o65/issues/6:
 
 * corrected <<change131,relocation syntax>>
+* clarification on CPU2 bits for CPU=1 (<<change131c,mode bits>>, <<change131a,inofficially supported CPUs>>, <<change131b,defined CPUs in appendix>>)
+* clarification on 65C02 and 65SC02 CPU variants (<<change131d,Notes on CMOS CPUs>>)
 
 
 Changes from V1.2
@@ -241,6 +243,7 @@ This is the fixed struct:
 
 The mode word currently has these defined bits:
 [[change13b]]
+[[change131c]]
 
 [source]
 ----
@@ -254,7 +257,9 @@ The mode word currently has these defined bits:
 	mode.10 :	chain	0= (ignored)	1= another file follows this one
 	mode.9  :	bsszero 0= (ignored)	1= the bss segment must be zeroed out for this file
 
-	mode.4-7 :	CPU2	0000 = 6502 core (no undocumented opcodes)
+	mode.4-7 :	CPU2	(for CPU = 0)
+
+				0000 = 6502 core (no undocumented opcodes)
 				0001 = 65C02 /w some bugfix, no illegal opcodes
 				0010 = 65SC02 (enhanced 65C02), some new opcodes
 				0011 = 65CE02 some 16bit ops/branches, Z register is modifiable
@@ -262,6 +267,15 @@ The mode word currently has these defined bits:
 				0101 = 65816 in 6502 emulation mode
 				011x = reserved
 				1xxx = reserved
+				^^^^ 
+				|||+- Bit 4
+				||+-- Bit 5
+				|+--- Bit 6
+				+---- Bit 7
+
+			CPU2	(for CPU = 1)
+
+				0000 = 65816 native mode
 				^^^^ 
 				|||+- Bit 4
 				||+-- Bit 5
@@ -461,7 +475,8 @@ undefined references.
 
 *Relocation Entry Syntax*
 
-[source][[change131]]
+[[change131]]
+[source]
 ----
 { [255,...,255,] offset of next relocation (b), typebyte|segmentID [, undefined index] [, low offset] }+
 ----
@@ -538,7 +553,15 @@ For example, code like
 refers to the high byte of an address, so this is a HIGH relocation, 
 and so forth.
 
-If the type is HIGH, the low byte of the value is stored behind the
+[[change12a]]
+If the segment is "undefined", the typebyte is immediately followed
+by the two (mode size=0) or four (mode size=1) byte value index 
+in the undefined references list (in the *undefined index* field). 
+The *undefined index* value 
+determines the undefined reference, which must be looked up by the
+loader.
+
+If the *typebyte* is HIGH, the low byte of the value is stored at the end of the
 relocation table entry (in the *low offset* field), if bytewise relocation is allowed (header mode
 field bit 14). If only pagewise relocation is allowed, then only HIGH
 relocation entries can occur, and the low byte is implicitely set zero
@@ -546,16 +569,9 @@ relocation entries can occur, and the low byte is implicitely set zero
 
 If the type is SEG, then the two lower bytes of the three byte segment
 address are stored behind the entry in the relocation table 
-(in the *low offset* field), lower byte first.
-
-[[change12a]]
-If the segment is "undefined", the typebyte is immediately followed
-by the two (mode size=0) or four (mode size=1) byte value index 
-in the undefined references list (in the *undefined index* field). 
-If it is a high byte relocation,
-the low byte is saved behind the index value (*low offset* field). The *undefined index* value 
-determines the undefined reference, which must be looked up by the
-loader.
+(in the *low offset* field), lower byte first - if bytewise relocation
+is allowed (header mode field bit 14). If only pagewise relocation
+is allowed, the low offset for a SEG entry only contains the high byte.
 
 The value taken from the relocation address in the segment, together with
 the low offset from the relocation table (if HIGH or SEG entry) form the address
@@ -564,10 +580,23 @@ the difference between the relocated segment base address and the segment
 base address from the file is then added to the above address. The result
 is again saved in the segment.
 
+If the segment is *undefined*, the value taken from the relocation address in the segment,
+together with the low offset from the relocation table (if HIGH or SEG entry),
+form an offset to be added to the value of the undefined reference. This way
+an entry like
+
+[source]
+----
+	LDA #>unknown_address + 1
+----
+
+can be implemented in the file as HIGH relocation, with *unknown_address* being an undefined reference,
+and *1* being the offset stored in the low offset in the relocation table.
+
 A zero offset byte ends the relocation table. The first offset is computed
 from the segment base address-1, to avoid a 0 value in the first entry.
 
-Note that direct addressing modes do not generate entries in the
+Note that direct (also known as zeropage) addressing modes do not generate entries in the
 relocation table. instead it is assumed that the 65816 direct register
 holds the correct value (i.e. zero segment base address) when running
 this program.
@@ -583,7 +612,7 @@ place is here:
 
 [source]
 ----
-$1222	A9 23 		lda #&gt;vector
+$1222	A9 23 		lda #>vector
 ----
 
 [[change13e]]
@@ -626,7 +655,7 @@ relocation table ($d0) and the high byte from $1457 ($23).
 
 [source]
 ----
-vector_file = ($23 &lt;&lt; 8) + $d0 = $23d0
+vector_file = ($23 << 8) + $d0 = $23d0
 ----
 
 To this value we add
@@ -841,8 +870,11 @@ there are CPU codes that are reserved for these CPUs. Please note that these
 codes are derived from the current use of the file format and not any
 preference of the author.
 
+[[change131a]]
 [source]
 ----
+	mode.15:        CPU     0 = 8-bit variants
+
         mode.4-7 :      CPU2    0000 = 6502 core (no undocumented opcodes)
                                 0001 = 65C02 /w some bugfix, no illegal opcodes
                                 0010 = 65SC02 (enhanced 65C02), some new opcodes
@@ -864,6 +896,92 @@ preference of the author.
                                 +---- Bit 7
 
 ----
+
+A.2) Clarification of CPU=1
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[[change131b]]
+
+In the header, there is a CPU bit *mode.15* that was originally intended to differentiate between the 6502 in general, 
+and the 65816. This has in a way been superseded by the *CPU2* bits defined as *mode.4-7*.
+
+Nevertheless, the *CPU2* bits are currently used for 8-bit variants only, even for the 65816 in 6502 emulation mode.
+On the other hand, there are more potential 8-bit variants, and some other potential candidates for wider, or extended
+6502 variants.
+
+Therefore, the *CPU* bit will be used to distinguish between more classical 8-bit oriented variants, and larger models like so:
+
+[source]
+----
+	mode.15:        CPU     1 = wider variants
+
+        mode.4-7 :      CPU2    0000 = 65816 native mode core (no undocumented opcodes)
+----
+
+A.3) Clarification on 65C02 and 65SC02
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+[[change131d]]
+
+When the file format was originally defined, a Rockwell 65C02 datasheet was used as base for the definition
+of the 65C02. I.e. this *CPU2* variant includes the bit manipulation and check instructions
+*RMB*, *SMB*, *BBR*, and *BBS*. 
+
+In the meantime it has been noted that other manufacturers 65C02 variants do not include these operations.
+When defining the *CPU2* bits, this has only been known to the author for the 65SC02.
+
+Therefore, as a clarification, here is the definition of the 65C02 and 65SC02 variants:
+
+[source]
+----
+
+65SC02 adds to NMOS 6502 these opcodes:
+	$80 - BRA
+	$12 - ORA (ind)
+	$32 - AND (ind)
+	$52 - EOR (ind)
+	$72 - ADC (ind)
+	$92 - STA (ind)
+	$b2 - LDA (ind)
+	$d2 - CMP (ind)
+	$f2 - SBC (ind)
+	
+	$04 - TSB zp
+	$14 - TRB zp
+	$34 - BIT zp,X
+	$64 - STZ zp
+	$74 - STZ zp,X
+
+	$98 - BIT imm
+
+	$1a - INC A
+	$3a - DEC A
+	$5a - PHY
+	$7a - PLY
+	$da - PHX
+	$fa - PLX
+
+	$0c - TSB abs
+	$1c - TRB abs
+	$3c - BIT abs,X
+	$7c - JMP (abs,X)
+	$9c - STZ abs
+
+	$9e - STZ abs,X
+
+65C02 adds to the 65SC02 these opcodes:	
+
+	$x7 - RMB0 ... RMB7, SMB0 ... SMB7
+	$xf - BBR0 ... BBR7, BBS0 ... BBS7
+
+----
+Note that at some points these CPU bits may be renamed as
+
+[source]
+----
+	65C02 -> R65C02
+	65SC02 -> 65C02
+----
+
 
 B) Late binding
 ~~~~~~~~~~~~~~~
