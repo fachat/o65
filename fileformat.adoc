@@ -935,6 +935,7 @@ Therefore, as a clarification, here is the definition of the 65C02 and 65SC02 va
 ----
 
 65SC02 adds to NMOS 6502 these opcodes:
+
 	$80 - BRA
 	$12 - ORA (ind)
 	$32 - AND (ind)
