@@ -4,11 +4,8 @@ o65 file format
 
 This is the reference documentation for the *o65* file format.
 
-Quick link:: link:../main/fileformat.html[current version (1.3) HTML] +
-	link:../main/fileformat.adoc[current version (1.3) ADOC] 
+Quick link:: link:../main/fileformat.adoc[current version (1.3.1) ADOC] 
 
-
-Note:: This is a transitional period from HTML to Asciidoc. In the future the HTML version will go away.
 
 The o65 fileformat provides portable way for using relocatable 6502 binaries. It can hold object files or executables, and features segments for uninitialized data, initialized data and text, as well as (uninitialized) zeropage. Block loading can be used and when there is no late-binding (which is possible) no side-storage is needed. 
 
@@ -31,7 +28,7 @@ The file format extension o65 for a 6502 relocatable file format is copyrighted 
 Changes
 ~~~~~~~
 
-Changes in v1.3 are an upward compatible change in the mode bits, more os types, and better explanations. 
+Changes in v1.3.1 are clarifications in the description of the relocation table.
 
 
 Proposed Changes
@@ -61,6 +58,13 @@ Link: link:fileformatng.html[]
 
 Historic versions
 -----------------
+
+version 1.3
+~~~~~~~~~~~
+
+link:../1.3/fileformat.html[version 1.3 (HTML)]
+
+link:../1.3/fileformat.adoc[version 1.3 (ADOC)]
 
 version 1.2
 ~~~~~~~~~~~
